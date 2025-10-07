@@ -1,22 +1,29 @@
 SHELL := /bin/bash
 
-.PHONY: build test ui devnet-deploy demo gate
+.PHONY: build test ui sdk devnet-deploy demo gate
 
 build:
 	anchor build
 
 test:
-	anchor test --skip-build
+	cargo test -p keystone-fee-router -- --nocapture
 
 ui:
-	cd apps/ui && pnpm i && pnpm dev
+	npm -w apps/ui install
+	npm -w apps/ui run build
+
+sdk:
+	npm -w sdk/ts run build
+	npm -w sdk/ts run pack
 
 devnet-deploy:
 	./scripts/deploy_anchor.sh
 
 demo:
-	./scripts/localnet.sh
+	solana-test-validator --reset --limit-ledger-size 4096 > /tmp/validator.log 2>&1 &
+	sleep 5
+	anchor deploy
+	npm -w apps/ui run dev
 
 gate:
 	bash scripts/acceptance_gate.sh
-
