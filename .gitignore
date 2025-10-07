@@ -21,4 +21,5 @@ cli/.env
 sdk/ts/lib/
 sdk/ts/dist/
 sdk/ts/node_modules/
+apps/ui/.next/
 *.tgz

@@ -75,11 +75,12 @@ export default function Page() {
     try {
       const provider = await getAnchorProvider(rpcUrl);
       const program = getProgram(provider, programKey, idl);
+      const accountClient = program.account as any;
       const [policyPda] = findPolicyPda(poolKey, programKey);
       const [progressPda] = findProgressPda(poolKey, programKey);
 
-      const policyAccount = await program.account.policy.fetch(policyPda);
-      const progressAccount = await program.account.progress.fetch(progressPda);
+      const policyAccount = await accountClient.policy.fetch(policyPda);
+      const progressAccount = await accountClient.progress.fetch(progressPda);
 
       setPolicyInfo({
         authority: policyAccount.authority.toBase58(),
