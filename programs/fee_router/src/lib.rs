@@ -696,4 +696,9 @@ mod tests {
         let min_payout = 500u64;
         assert!(share_capped < min_payout);
     }
+
+    #[cfg(feature = "bankrun-test")]
+    mod host_integration {
+        include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../tests/fee_router_integration.rs"));
+    }
 }

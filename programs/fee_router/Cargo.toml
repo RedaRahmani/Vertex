@@ -22,11 +22,10 @@ custom-panic = []
 anchor-debug = []
 no-idl = []
 no-log-ix-name = []
+bankrun-test = []
 
 [dependencies]
 anchor-lang.workspace = true
 anchor-spl.workspace = true
 thiserror.workspace = true
 bytemuck.workspace = true
-
-[dev-dependencies]
