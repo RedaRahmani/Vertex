@@ -1,0 +1,48 @@
+[workspace]
+members = [
+    "programs/launchpad",
+    "programs/amm_cp", 
+    "programs/staking",
+    "programs/vesting",
+    "programs/common",
+    "programs/fee_router",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+authors = ["Keystone Labs <dev@keystonelabs.xyz>"]
+license = "Apache-2.0"
+description = "Keystone Vertex suite of Solana programs and tooling"
+version = "0.1.0"
+
+[workspace.dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl  = "0.31.1"
+solana-security-txt = "1.1.1"
+bytemuck = { version = "1.14", features = ["derive" ] }
+thiserror = "1.0"
+anyhow = "1.0"
+num-traits = "0.2"
+num-derive = "0.4"
+uint = "0.9"
+static_assertions = "1.1"
+merlin = "3"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+getset = "0.1"
+strum = { version = "0.26", features = ["derive"] }
+solana-program-test = "1.18.17"
+solana-sdk = "1.18.17"
+proptest = "1.4"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+ 
+
+[workspace.metadata]
+category = "solana"
+repository = "https://github.com/keystone-labs/keystone-vertex"
+
+[profile.release]
+overflow-checks = true

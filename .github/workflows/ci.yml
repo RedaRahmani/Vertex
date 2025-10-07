@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ['*']
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Anchor
+        run: cargo install --locked anchor-cli
+      - name: Lint
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --workspace
+      - name: Fuzz (smoke)
+        run: cargo test -p keystone-fuzz -- curve_fuzz --nocapture
+      - name: Bench (check build)
+        run: cargo bench -p keystone-benches --no-run
+
+  typescript:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'pnpm'
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Install deps
+        run: |
+          pnpm install --frozen-lockfile --prefix sdk/ts || pnpm install --prefix sdk/ts
+          pnpm install --frozen-lockfile --prefix cli || pnpm install --prefix cli
+      - name: Lint
+        run: pnpm --prefix cli run lint
+      - name: Test SDK
+        run: pnpm --prefix sdk/ts run test
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build mkdocs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CONFIG_FILE: mkdocs.yml
+          REQUIREMENTS: ''
+          VERSION: latest
+          PREVIEW: 'true'

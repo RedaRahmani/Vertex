@@ -1,0 +1,12 @@
+{
+  "mint": "Mint1111111111111111111111111111111111",
+  "globalCap": 1000000,
+  "walletCap": 1000,
+  "startTime": 1700000000,
+  "endTime": 1700086400,
+  "pricing": {
+    "type": "fixed",
+    "price": 1000000000
+  },
+  "whitelist": null
+}

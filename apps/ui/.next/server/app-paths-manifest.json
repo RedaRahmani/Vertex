@@ -1,0 +1,7 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/policy-setup/page": "app/policy-setup/page.js",
+  "/page": "app/page.js",
+  "/honorary-position/page": "app/honorary-position/page.js",
+  "/daily-crank/page": "app/daily-crank/page.js"
+}

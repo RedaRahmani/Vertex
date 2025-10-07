@@ -1,0 +1,15 @@
+[package]
+name = "keystone-benches"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+criterion.workspace = true
+keystone-common = { path = "../../programs/common" }
+
+[[bench]]
+name = "curve"
+harness = false
