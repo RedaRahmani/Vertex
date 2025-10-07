@@ -1,5 +1,6 @@
-import { AnchorProvider, Idl, Program } from '@coral-xyz/anchor';
+import { AnchorProvider, Idl } from '@coral-xyz/anchor';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { getProgram } from './feeRouter';
 
 export interface LaunchpadProgramAccounts {
   buyer: PublicKey;
@@ -20,11 +21,6 @@ export interface LaunchpadBuyParams {
   maxQuote: bigint;
   proof?: Array<Uint8Array> | null;
   accounts: LaunchpadProgramAccounts;
-}
-
-/** Returns an Anchor program wrapper using the supplied IDL. */
-export function getProgram(provider: AnchorProvider, programId: PublicKey, idl: Idl): Program<Idl> {
-  return new Program(idl, programId, provider);
 }
 
 /** Builds a Launchpad buy instruction using IDL metadata. */
@@ -51,4 +47,6 @@ export async function buildLaunchpadBuyInstruction(params: LaunchpadBuyParams): 
     .instruction();
 }
 
+export { getProgram };
+export * from './feeRouter';
 export * as FeeRouter from './feeRouter';
