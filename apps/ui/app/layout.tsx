@@ -1,24 +1,28 @@
-import './globals.css';
+import Link from 'next/link';
 import React from 'react';
+import './globals.css';
+import { EnvironmentPanel, EnvironmentProvider } from './environment';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <div className="max-w-4xl mx-auto p-6">
-          <header className="mb-6 flex items-center justify-between">
-            <h1 className="text-xl font-semibold">Vertex Fee Router</h1>
-            <nav className="space-x-3 text-sm">
-              <a href="/" className="underline">Dashboard</a>
-              <a href="/policy-setup" className="underline">Policy Setup</a>
-              <a href="/honorary-position" className="underline">Honorary Position</a>
-              <a href="/daily-crank" className="underline">Daily Crank</a>
-            </nav>
-          </header>
-          {children}
-        </div>
+        <EnvironmentProvider>
+          <div className="mx-auto max-w-4xl p-6">
+            <header className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <h1 className="text-xl font-semibold">Vertex Fee Router</h1>
+              <nav className="flex flex-wrap gap-3 text-sm underline">
+                <Link href="/">Dashboard</Link>
+                <Link href="/policy-setup">Policy Setup</Link>
+                <Link href="/honorary-position">Honorary Position</Link>
+                <Link href="/daily-crank">Daily Crank</Link>
+              </nav>
+            </header>
+            <EnvironmentPanel />
+            {children}
+          </div>
+        </EnvironmentProvider>
       </body>
     </html>
   );
 }
-

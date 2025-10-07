@@ -1,0 +1,10 @@
+{
+  "name": "vertex-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/ui",
+    "sdk/ts",
+    "cli"
+  ]
+}
