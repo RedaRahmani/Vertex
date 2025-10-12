@@ -1,0 +1,34 @@
+[package]
+name = "keystone-amm-cp"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+authors.workspace = true
+description = "Keystone constant-product AMM Anchor program"
+
+[lib]
+name = "keystone_amm_cp"
+crate-type = ["cdylib", "lib"]
+
+[features]
+default = []
+no-entrypoint = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+cpi = ["no-entrypoint"]
+custom-heap = []
+custom-panic = []
+anchor-debug = []
+no-idl = []
+no-log-ix-name = []
+
+[dependencies]
+anchor-lang.workspace = true
+anchor-spl.workspace = true
+keystone-common = { path = "../common" }
+solana-security-txt.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1.4"

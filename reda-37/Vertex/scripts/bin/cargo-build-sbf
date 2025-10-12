@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Wrapper to force Solana cargo-build-sbf to use the v2 architecture, which has
+# a larger stack frame limit and avoids spurious driftsort stack warnings.
+if [[ "${1-}" == "build-sbf" ]]; then
+  shift
+fi
+
+SOLANA_TOOLS="${SOLANA_TOOLS:-$HOME/.local/share/solana/install/releases/2.2.12/solana-release/bin}"
+exec "${SOLANA_TOOLS}/cargo-build-sbf" --arch v2 "$@"

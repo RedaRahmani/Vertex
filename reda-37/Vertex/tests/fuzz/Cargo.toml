@@ -1,0 +1,15 @@
+[package]
+name = "keystone-fuzz"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+proptest.workspace = true
+keystone-common = { path = "../../programs/common" }
+
+[[test]]
+name = "curve_fuzz"
+path = "tests/curve_fuzz.rs"

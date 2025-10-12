@@ -1,0 +1,32 @@
+[package]
+name = "keystone-common"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+authors.workspace = true
+description = "Shared utilities for Keystone Vertex Solana programs"
+
+[lib]
+name = "keystone_common"
+crate-type = ["lib"]
+
+[dependencies]
+anchor-lang.workspace = true
+anchor-spl.workspace = true
+bytemuck.workspace = true
+thiserror.workspace = true
+num-traits.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+getset.workspace = true
+strum.workspace = true
+uint.workspace = true
+static_assertions.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+
+[features]
+default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+strict = []

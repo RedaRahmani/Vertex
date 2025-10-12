@@ -1,0 +1,30 @@
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+[programs.localnet]
+keystone_launchpad = "5VFvyBybqEMVChCDBd6qncckSFcKUzn1owdjyThyxHx5"
+keystone_amm_cp = "Hfts9nZFo1epBQe7Gsn54QzvNmZhipcynG58feJs2BnX"
+keystone_staking = "2cFCPc4MCUqwd5FTopBprTyr3pwAsXDNcxjgPhGKRdo5"
+keystone_vesting = "C3HSSPsKxkFeLvZr6jNujoA1Z1bHH4VzC3dK5HSMTpvq"
+keystone_fee_router = "4qNDSGkcnyX9o18U1RrPoMomhyE2j5VXB7e7LfbAE4K7"
+
+[programs.devnet]
+keystone_fee_router = "4qNDSGkcnyX9o18U1RrPoMomhyE2j5VXB7e7LfbAE4K7"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[build]
+generate_cpi_crate = true
+
+[toolchain]
+anchor_version = "0.31.1"
+
+[scripts]
+localnet = "./scripts/localnet.sh"
+deploy = "./scripts/deploy_anchor.sh"
+
+[sbf]
+stack_size = 65536
+arch = "v2"
