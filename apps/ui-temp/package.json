@@ -1,0 +1,36 @@
+{
+  "name": "ui-temp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@keystone/sdk": "file:../../sdk/ts/keystone-sdk-0.1.0.tgz",
+    "@solana/spl-token": "^0.4.6",
+    "@solana/wallet-adapter-react": "^0.15.34",
+    "@solana/wallet-adapter-react-ui": "^0.9.34",
+    "@solana/wallet-adapter-wallets": "^0.19.21",
+    "@solana/web3.js": "^1.95.2",
+    "clsx": "^2.0.0",
+    "next": "15.5.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8",
+    "tailwindcss": "^3",
+    "typescript": "^5"
+  },
+  "resolutions": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  }
+}
