@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Program, AnchorProvider, web3, BN } from '@coral-xyz/anchor';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';

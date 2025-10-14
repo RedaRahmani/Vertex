@@ -80,7 +80,15 @@ export default function Page() {
       const [progressPda] = findProgressPda(poolKey, programKey);
 
       const policyAccount = await accountClient.policy.fetch(policyPda);
-      const progressAccount = await accountClient.progress.fetch(progressPda);
+      let progressAccount: any | null = null;
+      try {
+        progressAccount = await accountClient.progress.fetch(progressPda);
+      } catch (fetchErr) {
+        const message = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+        if (!message.includes('Account does not exist')) {
+          throw fetchErr;
+        }
+      }
 
       setPolicyInfo({
         authority: policyAccount.authority.toBase58(),
@@ -94,14 +102,18 @@ export default function Page() {
         minPayout: policyAccount.minPayoutLamports.toString(),
       });
 
-      setProgressInfo({
-        currentDay: progressAccount.currentDay.toString(),
-        claimed: progressAccount.claimedQuoteToday.toString(),
-        distributed: progressAccount.distributedQuoteToday.toString(),
-        carry: progressAccount.carryQuoteToday.toString(),
-        pageCursor: progressAccount.pageCursor.toString(),
-        dayClosed: !!progressAccount.dayClosed,
-      });
+      if (progressAccount) {
+        setProgressInfo({
+          currentDay: progressAccount.currentDay.toString(),
+          claimed: progressAccount.claimedQuoteToday.toString(),
+          distributed: progressAccount.distributedQuoteToday.toString(),
+          carry: progressAccount.carryQuoteToday.toString(),
+          pageCursor: progressAccount.pageCursor.toString(),
+          dayClosed: !!progressAccount.dayClosed,
+        });
+      } else {
+        setProgressInfo(null);
+      }
 
       const connection: Connection = provider.connection;
       const signatures = await connection.getSignaturesForAddress(policyPda, { limit: 8 });
@@ -113,7 +125,7 @@ export default function Page() {
         })),
       );
 
-      setStatus('Fetched latest state.');
+      setStatus(progressAccount ? 'Fetched latest state.' : 'Policy fetched. Progress will appear after the first crank.');
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setStatus(`Error: ${message}`);

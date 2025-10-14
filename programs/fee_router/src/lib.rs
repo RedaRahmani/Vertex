@@ -15,7 +15,7 @@ mod stream_adapter;
 use stream_adapter::StreamLockedReader;
 
 // Program ID is set by Anchor.toml; this will be patched during setup.
-declare_id!("4qNDSGkcnyX9o18U1RrPoMomhyE2j5VXB7e7LfbAE4K7");
+declare_id!("B4yaCkpGZB9Xnm2ZRcj9k1stdkXzkCJdbU26EWj8h7Dc");
 
 /// PDA seed: vault authority prefix.
 pub const VAULT_SEED: &[u8] = b"vault";

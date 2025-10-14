@@ -7,10 +7,10 @@ keystone_launchpad = "5VFvyBybqEMVChCDBd6qncckSFcKUzn1owdjyThyxHx5"
 keystone_amm_cp = "Hfts9nZFo1epBQe7Gsn54QzvNmZhipcynG58feJs2BnX"
 keystone_staking = "2cFCPc4MCUqwd5FTopBprTyr3pwAsXDNcxjgPhGKRdo5"
 keystone_vesting = "C3HSSPsKxkFeLvZr6jNujoA1Z1bHH4VzC3dK5HSMTpvq"
-keystone_fee_router = "4qNDSGkcnyX9o18U1RrPoMomhyE2j5VXB7e7LfbAE4K7"
+keystone_fee_router = "B4yaCkpGZB9Xnm2ZRcj9k1stdkXzkCJdbU26EWj8h7Dc"
 
 [programs.devnet]
-keystone_fee_router = "4qNDSGkcnyX9o18U1RrPoMomhyE2j5VXB7e7LfbAE4K7"
+keystone_fee_router = "B4yaCkpGZB9Xnm2ZRcj9k1stdkXzkCJdbU26EWj8h7Dc"
 
 [registry]
 url = "https://anchor.projectserum.com"

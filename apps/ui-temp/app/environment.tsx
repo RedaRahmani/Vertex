@@ -11,6 +11,8 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { DEFAULT_IDL } from './idl';
+import { LOCAL_FIXTURE } from './config';
 
 type EnvState = {
   rpcUrl: string;
@@ -32,9 +34,9 @@ const STORAGE_KEY = 'fee-router-env';
 const EnvironmentContext = createContext<EnvironmentContextValue | undefined>(undefined);
 
 const DEFAULT_STATE: EnvState = {
-  rpcUrl: 'http://127.0.0.1:8899',
-  programId: '',
-  idlJson: '',
+  rpcUrl: LOCAL_FIXTURE.rpcUrl,
+  programId: LOCAL_FIXTURE.programId,
+  idlJson: JSON.stringify(DEFAULT_IDL, null, 2),
 };
 
 export function EnvironmentProvider({ children }: { children: ReactNode }) {

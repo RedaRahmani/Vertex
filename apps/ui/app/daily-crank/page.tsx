@@ -5,6 +5,7 @@ import { ComputeBudgetProgram, PublicKey, Transaction } from '@solana/web3.js';
 import { buildCrankDistributeIx } from '@keystone/sdk';
 import { useEnvironment } from '../environment';
 import { getAnchorProvider } from '../lib/provider';
+import { signAndSendTransaction } from '../lib/signAndSendTransaction';
 
 export default function Page() {
   const { rpcUrl, programKey, idl } = useEnvironment();
@@ -64,8 +65,7 @@ export default function Page() {
         tx.add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: computePrice }));
       }
       tx.add(ix);
-      (tx as any).feePayer = provider.wallet.publicKey;
-      const sig = await provider.sendAndConfirm(tx);
+      const sig = await signAndSendTransaction(provider, tx);
       setStatus(`Crank tx: ${sig}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

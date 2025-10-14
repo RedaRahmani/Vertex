@@ -5,16 +5,18 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { buildInitHonoraryPositionIx, findPositionPda } from '@keystone/sdk';
 import { useEnvironment } from '../environment';
 import { getAnchorProvider } from '../lib/provider';
+import { signAndSendTransaction } from '../lib/signAndSendTransaction';
+import { LOCAL_FIXTURE } from '../config';
 
 const VAULT_SEED = Buffer.from('vault');
 const FEE_POS_OWNER_SEED = Buffer.from('investor_fee_pos_owner');
 
 export default function Page() {
   const { rpcUrl, programKey, idl } = useEnvironment();
-  const [policy, setPolicy] = useState('');
-  const [cpPool, setCpPool] = useState('');
-  const [quoteMint, setQuoteMint] = useState('');
-  const [cpPosition, setCpPosition] = useState('');
+  const [policy, setPolicy] = useState<string>(LOCAL_FIXTURE.policy);
+  const [cpPool, setCpPool] = useState<string>(LOCAL_FIXTURE.cpPool);
+  const [quoteMint, setQuoteMint] = useState<string>(LOCAL_FIXTURE.quoteMint);
+  const [cpPosition, setCpPosition] = useState<string>(LOCAL_FIXTURE.cpPosition);
   const [status, setStatus] = useState<string | null>(null);
 
   const derived = useMemo(() => {
@@ -67,8 +69,7 @@ export default function Page() {
         authority: provider.wallet.publicKey,
       });
       const tx = new Transaction().add(ix);
-      (tx as any).feePayer = provider.wallet.publicKey;
-      const sig = await provider.sendAndConfirm(tx);
+      const sig = await signAndSendTransaction(provider, tx);
       setStatus(`Init Honorary Position tx: ${sig}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

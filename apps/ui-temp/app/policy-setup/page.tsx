@@ -1,17 +1,30 @@
 "use client";
 
-import { useMemo, useState } from 'react';
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { buildInitPolicyIx, findPolicyPda, findVaultAuthorityPda } from '@keystone/sdk';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddressSync,
+} from '@solana/spl-token';
 import { useEnvironment } from '../environment';
 import { getAnchorProvider } from '../lib/provider';
+import { signAndSendTransaction } from '../lib/signAndSendTransaction';
+import { LOCAL_FIXTURE } from '../config';
 
 export default function Page() {
   const { rpcUrl, programKey, idl } = useEnvironment();
-  const [cpPool, setCpPool] = useState('');
-  const [quoteMint, setQuoteMint] = useState('');
-  const [creatorAta, setCreatorAta] = useState('');
-  const [treasuryAta, setTreasuryAta] = useState('');
+  const [cpPool, setCpPool] = useState<string>(LOCAL_FIXTURE.cpPool);
+  const [quoteMint, setQuoteMint] = useState<string>(LOCAL_FIXTURE.quoteMint);
+  const [creatorAta, setCreatorAta] = useState<string>(LOCAL_FIXTURE.creatorAta);
+  const [treasuryAta, setTreasuryAta] = useState<string>(LOCAL_FIXTURE.treasuryAta);
   const [bps, setBps] = useState(2000);
   const [y0, setY0] = useState(100000);
   const [cap, setCap] = useState(0);
@@ -20,17 +33,32 @@ export default function Page() {
 
   const derived = useMemo(() => {
     if (!programKey || !cpPool) {
-      return { policy: '', vault: '' };
+      return { policy: '', vault: '', treasury: '' };
     }
     try {
       const poolKey = new PublicKey(cpPool);
       const [policy] = findPolicyPda(poolKey, programKey);
       const [vault] = findVaultAuthorityPda(policy, programKey);
-      return { policy: policy.toBase58(), vault: vault.toBase58() };
+      let treasury = '';
+      if (quoteMint) {
+        try {
+          const mintKey = new PublicKey(quoteMint);
+          treasury = getAssociatedTokenAddressSync(mintKey, vault, true).toBase58();
+        } catch {
+          treasury = '';
+        }
+      }
+      return { policy: policy.toBase58(), vault: vault.toBase58(), treasury };
     } catch {
-      return { policy: '', vault: '' };
+      return { policy: '', vault: '', treasury: '' };
     }
-  }, [cpPool, programKey]);
+  }, [cpPool, programKey, quoteMint]);
+
+  useEffect(() => {
+    if (derived.treasury && treasuryAta !== derived.treasury) {
+      setTreasuryAta(derived.treasury);
+    }
+  }, [derived.treasury, treasuryAta]);
 
   async function onSubmit() {
     if (!programKey || !idl) {
@@ -41,11 +69,14 @@ export default function Page() {
     let quoteKey: PublicKey;
     let creatorKey: PublicKey;
     let treasuryKey: PublicKey;
+    let vaultKey: PublicKey;
     try {
       poolKey = new PublicKey(cpPool);
       quoteKey = new PublicKey(quoteMint);
       creatorKey = new PublicKey(creatorAta);
       treasuryKey = new PublicKey(treasuryAta);
+      const [policyPda] = findPolicyPda(poolKey, programKey);
+      [vaultKey] = findVaultAuthorityPda(policyPda, programKey);
     } catch {
       setStatus('Invalid public key in inputs.');
       return;
@@ -54,6 +85,93 @@ export default function Page() {
     try {
       setStatus('Submitting transaction...');
       const provider = await getAnchorProvider(rpcUrl);
+
+      const programInfo = await provider.connection.getAccountInfo(programKey);
+      if (!programInfo) {
+        setStatus(
+          `Program ${programKey.toBase58()} not found on ${rpcUrl}. Deploy it or double-check the ID.`,
+        );
+        return;
+      }
+
+      const minBalanceLamports = 0.5 * LAMPORTS_PER_SOL;
+      const balance = await provider.connection.getBalance(provider.wallet.publicKey);
+      if (balance < minBalanceLamports) {
+        const canAirdrop = rpcUrl.includes('127.0.0.1') || rpcUrl.includes('localhost');
+        if (!canAirdrop) {
+          setStatus('Wallet balance too low to cover rent; please top up and retry.');
+          return;
+        }
+        const airdropSig = await provider.connection.requestAirdrop(
+          provider.wallet.publicKey,
+          2 * LAMPORTS_PER_SOL,
+        );
+        const latest = await provider.connection.getLatestBlockhash('confirmed');
+        await provider.connection.confirmTransaction(
+          { signature: airdropSig, ...latest },
+          'confirmed',
+        );
+        setStatus('Airdropped 2 SOL to fund rent. Submitting transaction...');
+      }
+
+      const expectedTreasury = getAssociatedTokenAddressSync(quoteKey, vaultKey, true);
+      if (!treasuryKey.equals(expectedTreasury)) {
+        setStatus(`Treasury ATA must be the vault ATA ${expectedTreasury.toBase58()}.`);
+        return;
+      }
+
+      const mintInfo = await provider.connection.getAccountInfo(quoteKey);
+      if (!mintInfo) {
+        setStatus(`Quote mint ${quoteKey.toBase58()} not found on chain; create the mint first.`);
+        return;
+      }
+      if (!mintInfo.owner.equals(TOKEN_PROGRAM_ID)) {
+        setStatus(
+          `Quote mint ${quoteKey.toBase58()} is not owned by the SPL Token program. Double-check the mint address.`,
+        );
+        return;
+      }
+
+      const instructions: TransactionInstruction[] = [];
+      const creatorInfo = await provider.connection.getAccountInfo(creatorKey);
+      if (!creatorInfo) {
+        const expectedCreator = getAssociatedTokenAddressSync(
+          quoteKey,
+          provider.wallet.publicKey,
+          false,
+        );
+        if (!creatorKey.equals(expectedCreator)) {
+          setStatus(
+            `Creator ATA not found. Either create it manually or use ${expectedCreator.toBase58()}.`,
+          );
+          return;
+        }
+        instructions.push(
+          createAssociatedTokenAccountInstruction(
+            provider.wallet.publicKey,
+            creatorKey,
+            provider.wallet.publicKey,
+            quoteKey,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+          ),
+        );
+      }
+
+      const treasuryInfo = await provider.connection.getAccountInfo(treasuryKey);
+      if (!treasuryInfo) {
+        instructions.push(
+          createAssociatedTokenAccountInstruction(
+            provider.wallet.publicKey,
+            treasuryKey,
+            vaultKey,
+            quoteKey,
+            TOKEN_PROGRAM_ID,
+            ASSOCIATED_TOKEN_PROGRAM_ID,
+          ),
+        );
+      }
+
       const ix = await buildInitPolicyIx({
         provider,
         programId: programKey,
@@ -68,9 +186,10 @@ export default function Page() {
         minPayoutLamports: BigInt(minPayout),
         authority: provider.wallet.publicKey,
       });
-      const tx = new Transaction().add(ix);
-      (tx as any).feePayer = provider.wallet.publicKey;
-      const sig = await provider.sendAndConfirm(tx);
+      const tx = new Transaction();
+      instructions.forEach(ixn => tx.add(ixn));
+      tx.add(ix);
+      const sig = await signAndSendTransaction(provider, tx);
       setStatus(`Init Policy tx: ${sig}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -100,12 +219,19 @@ export default function Page() {
           value={creatorAta}
           onChange={e => setCreatorAta(e.target.value)}
         />
-        <input
-          className="rounded border p-2"
-          placeholder="Treasury quote ATA (vault-owned)"
-          value={treasuryAta}
-          onChange={e => setTreasuryAta(e.target.value)}
-        />
+        <div className="flex flex-col gap-1">
+          <input
+            className="rounded border p-2 font-mono"
+            placeholder="Treasury quote ATA (vault-owned)"
+            value={treasuryAta}
+            onChange={e => setTreasuryAta(e.target.value)}
+          />
+          {derived.treasury && (
+            <span className="text-xs text-gray-500">
+              Expected vault ATA: {derived.treasury}
+            </span>
+          )}
+        </div>
         <input
           className="rounded border p-2"
           placeholder="Investor fee share bps"
@@ -140,6 +266,9 @@ export default function Page() {
           <div className="flex flex-col gap-1">
             <span><strong>Policy PDA:</strong> {derived.policy}</span>
             <span><strong>Vault PDA:</strong> {derived.vault}</span>
+            {derived.treasury && (
+              <span><strong>Vault Quote ATA:</strong> {derived.treasury}</span>
+            )}
           </div>
         </div>
       )}

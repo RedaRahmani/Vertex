@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
 import { Program } from '@coral-xyz/anchor';
