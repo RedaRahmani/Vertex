@@ -23,3 +23,13 @@ sdk/ts/dist/
 sdk/ts/node_modules/
 apps/ui/.next/
 *.tgz
+# build & local validator junk
+target/
+test-ledger/
+**/rocksdb/
+snapshot-*
+**/snapshots*/
+*.sst
+*.log
+*.lock
+*.db
