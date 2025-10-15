@@ -186,4 +186,4 @@ See [`audits/threat_model.md`](audits/threat_model.md) and [`audits/checklist.md
 
 ---
 
-With this module, Star can spin up a Meteora honorary LP, guarantee quote‑only fees, and stream investor payouts in under a minute—no bespoke scaffolding required. Let’s win that bounty. 🚀
+With this module, Star can spin up a Meteora honorary LP, guarantee quote‑only fees, and stream investor payouts in under a minute—no bespoke scaffolding required.  🚀
