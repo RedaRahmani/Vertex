@@ -1,74 +1,176 @@
-# Keystone Vertex
+# Keystone Vertex – Meteora DAMM v2 Honorary Fee Router
 
-Keystone Vertex is a production-oriented Solana program suite for token launches, automated market making, staking, and vesting. The repository ships with Anchor programs, SDKs (Rust + TypeScript), a CLI, reference UI, fuzz/bench harnesses, and a mkdocs documentation site.
+Star’s mission is to make fund‑raising on-chain feel like “Twitch × Kickstarter × NASDAQ.”  
+This repository delivers the module we built for the Star bounty: an Anchor compatible
+fee router that:
+
+1. Opens a Meteora DLMM v2 honorary LP position owned by our PDA and guaranteed to accrue **quote-only** fees.
+2. Provides a once‑per‑day, permissionless crank that claims those fees, pays investors pro‑rata to still-locked Streamflow balances, and routes the carry remainder to the creator.
+
+We packaged the on-chain program, Rust/TypeScript SDKs, a CLI, and a reference Next.js UI so the Star team can drop it directly into their stack.
+
+---
 
 ## Repository Layout
 
 ```
-programs/         # Anchor on-chain logic (launchpad, AMM, staking, vesting)
-sdk/rust          # Rust instruction builders and program wrappers
-sdk/ts            # TypeScript helpers (Anchor compatible)
-cli               # `star` CLI for deployments and ops
-app-demo/web      # Next.js demo for sanity checks
-scripts           # Localnet/devnet automation
-audits            # Threat model and security checklist
-docs              # mkdocs documentation site
+programs/fee_router      Anchor program for honorary position + distribution crank
+apps/ui-temp             Reference Next.js UI (policy setup, honorary position, daily crank)
+sdk/rust, sdk/ts         Instruction builders and account helpers
+scripts/                 Local validator automation and fixtures
+audits/                  Threat model + security checklist
+docs/                    MkDocs documentation site
 ```
 
-## Quickstart
+---
+
+## Running the Demo Locally
+
+These steps produce the exact flow shown in the screenshots below. Everything runs on a local validator; Phantom (or any Solana wallet) must be set to **Localnet** and connected to `localhost:3000`.
 
 ```bash
-# toolchains
-rustup component add clippy rustfmt
-cargo install --locked anchor-cli
+# 1. Start a clean validator
+solana-test-validator
 
-# install JS deps
-pnpm install --prefix sdk/ts
-pnpm install --prefix cli
-pnpm install --prefix app-demo/web
+# in a new shell: build + deploy the fee router program
+anchor build -p keystone_fee_router
+anchor deploy -p keystone_fee_router
 
-# build and test
-anchor build
-cargo test
-pnpm --prefix sdk/ts run test
+# 2. Seed deterministic fixture accounts (quote mint, cp_pool, honorary position PDA seeds)
+node scripts/setup-local-fixture.js
+
+# 3. Launch the reference UI
+npm --prefix apps/ui-temp run dev
 ```
 
-## Fee Router Demo (Meteora DLMM v2 + Streamflow mock)
+Every fixture run rewrites `target/local-fixture.json` and `apps/ui-temp/app/config.ts` with the program ID, Meteora pool, quote mint, PDAs, and ATAs that the UI pre-fills.
 
-- Deploy local validator and programs, then run a demo: `make demo`
-- Run the acceptance gate (build, scan logs, IDL/binary presence): `make gate`
-- Next.js UI for the fee router (apps/ui): `make ui`
+---
 
-Notes
-- Fee Router program lives at `programs/fee_router` and has its own IDL and Program ID.
-- Meteora DLMM program id is configurable via accounts/clients; a known ID is documented but not hardcoded in logic.
-- Streamflow adapter is pluggable; the default mock reads the first 8 bytes of the stream account as a u64 still-locked amount.
+## UI Walkthrough
 
-## Security Controls
+> **Where do I find the Program ID and IDL?**  
+Both values are copied by `scripts/setup-local-fixture.js`. The script writes:
+>
+> - Program ID: `LOCAL_FIXTURE.programId`
+> - Full IDL JSON: `apps/ui-temp/app/idl.ts`  
+> - All PDAs / ATAs needed for the flow: `target/local-fixture.json`
 
-- PDA bumps persisted on-chain and reused for signer derivations.
-- Merkle proofs enforced for whitelist sales.
-- Auctions store highest bid and anti-snipe extension to reduce MEV.
-- AMM math uses checked 128-bit arithmetic and fuzz testing.
-- Staking lock policies validated before unstake transfers.
-- Vesting enforces chronological schedules and supports revocation toggles.
+### 1. Dashboard – Environment & State Inspection
 
-Refer to [`audits/threat_model.md`](audits/threat_model.md) and [`audits/checklist.md`](audits/checklist.md) before deploying.
+![Dashboard](docs/assets/ui-dashboard.png)
 
-## Documentation
+1. Paste the Program ID and IDL JSON recorded in `target/local-fixture.json`.  
+   (The UI caches these in `localStorage` after you press **Save**.)
+2. Enter the Meteora `cp_pool` from the same fixture file and press **Fetch State**.  
+   Before the first crank runs you’ll see a policy summary plus a note indicating the Progress account will appear after the initial distribution.
 
-Docs live under `docs/` and can be served locally:
+### 2. Policy Setup – Initialize the Daily Policy
 
-```bash
-pip install mkdocs-material
-mkdocs serve
-```
+![Policy Setup](docs/assets/ui-policy.png)
 
-## Happy Path Demo
+All inputs are pre-populated from the fixture:
 
-See [docs/operations/deployments.md](docs/operations/deployments.md) for a scripted run that covers:
-1. Launch configuration initialization and whitelist sale.
-2. Auction bid + settlement.
-3. AMM pool creation with swap.
-4. Staking stake/claim/unstake cycle.
-5. Vesting schedule create/claim.
+- `Meteora cp_pool` – `LOCAL_FIXTURE.cpPool`
+- `Quote mint` – `LOCAL_FIXTURE.quoteMint`
+- `Creator quote ATA` – `LOCAL_FIXTURE.creatorAta`
+- `Treasury quote ATA` – `LOCAL_FIXTURE.treasuryAta`
+- Economic knobs (`Y0`, `bps`, cap, min payout)
+
+Click **Initialize Policy** and approve the Phantom prompt. The transaction signature is displayed on success (e.g. `Init Policy tx: ...`). This stores the immutable configuration and the PDAs are displayed above the button for reference.
+
+### 3. Honorary Position – Bind the Meteora LP
+
+![Honorary Position](docs/assets/ui-honorary.png)
+
+Again, values are filled automatically:
+
+- `Policy PDA` – `LOCAL_FIXTURE.policy`
+- `Meteora cp_pool` – `LOCAL_FIXTURE.cpPool`
+- `Quote mint` – `LOCAL_FIXTURE.quoteMint`
+- `cp-position account` – `LOCAL_FIXTURE.cpPosition`
+
+Press **Initialize Honorary Position** to create the position PDA and tie it to the DLMM owner PDA. The UI echoes both the Honorary Position PDA and the fee-owner PDA derived from `[VAULT_SEED, policy, investor_fee_pos_owner]`.
+
+### 4. Daily Crank – Quote Fee Distribution
+
+![Daily Crank](docs/assets/ui-crank.png)
+
+This form requires both static and per-investor values:
+
+| Input                         | Default Source                                      | Notes                                                                                         |
+|-------------------------------|-----------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| Policy PDA                    | `LOCAL_FIXTURE.policy`                              | Static                                                                                         |
+| Meteora cp_pool               | `LOCAL_FIXTURE.cpPool`                              | Static                                                                                         |
+| Treasury quote ATA            | `LOCAL_FIXTURE.treasuryAta`                         | Static, owned by the vault PDA                                                                 |
+| Creator quote ATA             | `LOCAL_FIXTURE.creatorAta`                          | Static, receives end-of-day remainder                                                          |
+| Investor quote ATA            | *(must supply per investor page)*                   | Streamflow-provided token account, same quote mint                                             |
+| Stream account                | *(must supply per investor page)*                   | Streamflow stream PDA; fee router reads `locked` at crank time                                 |
+| Page cursor (u64)             | Free-form                                           | Caller-chosen opaque value for pagination bookkeeping                                          |
+| Carry cursor (u64)            | Free-form                                           | We reuse the fixture default `0`; the crank stores it in the Progress account                  |
+| “Is last page?” checkbox      | Off by default                                      | Toggle **after** you submit the final investor page of the UTC day (routes remainder to creator) |
+
+For real payout pages you’ll pass the Streamflow stream and investor ATA for each investor. The UI accepts additional investor entries (ATA + stream) via the “Additional Investors” section (not shown in the screenshot) to cover multi-investor pages.
+
+### 5. Dashboard – Fetch Policy State
+
+![Fetch State](docs/assets/ui-dashboard-policy.png)
+
+After the policy is initialized, **Fetch State** displays:
+
+- Policy PDA and derived Progress PDA
+- Immutable economic configuration
+- Quote mint, Y0 total, fee share, caps, dust threshold
+- Creator and treasury ATAs
+
+Once you run the crank for the first time, the Progress card is populated with:
+
+- Current UTC day (`floor(ts/86400)`)
+- Last crank timestamp
+- Claimed/distributed quote totals
+- Carry-over, cursor, and `day_closed` flag
+
+---
+
+## Bounty Requirements Checklist
+
+| Requirement                                           | Implementation Reference                                                                    |
+|-------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| Honorary position owned by PDA, quote-only fees       | `programs/fee_router/src/lib.rs::init_honorary_position` (quote mint validation + Meteora CPI guard) |
+| 24h distribution crank with pagination                | `programs/fee_router/src/lib.rs::crank_distribute`                                           |
+| Idempotent daily tracking (Progress account)          | `Progress` account schema (`current_day`, `page_cursor`, `carry_quote_today`, `day_closed`)   |
+| Per-investor pro-rata math with caps & dust           | `compute_investor_quote` and distribution loop                                               |
+| Remainder routed to creator when `is_last_page`       | Final branch in `crank_distribute`                                                           |
+| Quote-only guard (base fees rejected)                 | `assert_cp_pool_quote_only` + Meteora CPI result checks                                      |
+| Streamflow integration                                | `stream_adapter::StreamLockedReader` (mock adapter)                                          |
+| Events emitted                                        | `PolicyInitialized`, `HonoraryPositionInitialized`, `InvestorPayoutPage`, `CreatorPayoutDayClosed` |
+
+Tests and scripts that exercise the happy path live under `tests/`, `scripts/`, and the Next.js UI.
+
+---
+
+## Security Notes
+
+- All PDAs store bumps on-chain to prevent accidental drift.
+- Honorary position initialization validates pool mint ordering and quote-only accrual.
+- Crank enforces 24h gating, handles retries safely, and never double-pays.
+- Arithmetic uses checked 128-bit intermediates to avoid overflow.
+
+See [`audits/threat_model.md`](audits/threat_model.md) and [`audits/checklist.md`](audits/checklist.md) before mainnet deployment.
+
+---
+
+## Documentation & Tooling
+
+- Rust + TypeScript SDKs: instruction builders and account parsers for integrating the module into Star’s backend.
+- CLI (`cli/`): operational commands for deployments and configuration.
+- Docs (MkDocs) can be served locally:
+
+  ```bash
+  pip install mkdocs-material
+  mkdocs serve
+  ```
+
+---
+
+With this module, Star can spin up a Meteora honorary LP, guarantee quote‑only fees, and stream investor payouts in under a minute—no bespoke scaffolding required. Let’s win that bounty. 🚀
