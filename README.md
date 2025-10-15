@@ -1,11 +1,25 @@
-# Keystone Vertex – Meteora DAMM v2 Honorary Fee Router
+# Vertex – Meteora DAMM v2 Permissionless Fee Router
 
-Star’s mission is to make fund‑raising on-chain feel like “Twitch × Kickstarter × NASDAQ.”  
-This repository delivers the module we built for the Star bounty: an Anchor compatible
-fee router that:
+Built for the **@stardotfun** bounty **“Permissionless Fee Routing for Meteora DAMM v2”**, **Vertex** is a production-ready Solana module that automates daily quote-fee collection and distribution for DAMM v2 pools — no manual cranks, no creator intervention.
 
-1. Opens a Meteora DLMM v2 honorary LP position owned by our PDA and guaranteed to accrue **quote-only** fees.
-2. Provides a once‑per‑day, permissionless crank that claims those fees, pays investors pro‑rata to still-locked Streamflow balances, and routes the carry remainder to the creator.
+## 🧩 Core Functionality
+
+**Vertex provides:**
+
+### Honorary LP Position (Quote-Only)
+Opens a Meteora DLMM v2 liquidity position owned by a program PDA, guaranteed to accrue **only quote-mint fees**.
+
+### 24-Hour Permissionless Distribution Crank
+Anyone can trigger the crank once per UTC day to:
+- Claim accrued quote fees from the Meteora pool
+- Compute pro-rata investor payouts using Streamflow’s still-locked balances
+- Route the remaining carry (creator share) to the creator’s quote ATA
+
+### Resumable Pagination
+Supports multi-page investor sets with deterministic continuation (no double-payouts, safe retries).
+
+### Streamflow Integration
+Reads on-chain vesting streams to compute real-time locked ratios for fair, transparent fee sharing.
 
 We packaged the on-chain program, Rust/TypeScript SDKs, a CLI, and a reference Next.js UI so the Star team can drop it directly into their stack.
 
