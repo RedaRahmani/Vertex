@@ -67,7 +67,7 @@ Every fixture run rewrites `target/local-fixture.json` and `apps/ui-temp/app/con
 Both values are copied by `scripts/setup-local-fixture.js`. The script writes:
 >
 > - Program ID: `LOCAL_FIXTURE.programId`
-> - Full IDL JSON: `apps/ui-temp/app/idl.ts`  
+> - Full IDL JSON: `Vertex/target/idl/keystone_fee_router.json`  
 > - All PDAs / ATAs needed for the flow: `target/local-fixture.json`
 
 ### 1. Dashboard – Environment & State Inspection
