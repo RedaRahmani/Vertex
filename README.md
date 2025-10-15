@@ -60,6 +60,9 @@ Both values are copied by `scripts/setup-local-fixture.js`. The script writes:
 
 ![Dashboard](docs/assets/ui-dashboard.png)
 
+<img width="1449" height="591" alt="image" src="https://github.com/user-attachments/assets/08bab249-cbb6-45d0-a9dd-2497ed3d248a" />
+
+
 1. Paste the Program ID and IDL JSON recorded in `target/local-fixture.json`.  
    (The UI caches these in `localStorage` after you press **Save**.)
 2. Enter the Meteora `cp_pool` from the same fixture file and press **Fetch State**.  
@@ -68,6 +71,8 @@ Both values are copied by `scripts/setup-local-fixture.js`. The script writes:
 ### 2. Policy Setup – Initialize the Daily Policy
 
 ![Policy Setup](docs/assets/ui-policy.png)
+
+<img width="1123" height="868" alt="image" src="https://github.com/user-attachments/assets/323ea0e7-a00d-4896-9834-07dfda2db71c" />
 
 All inputs are pre-populated from the fixture:
 
@@ -83,6 +88,8 @@ Click **Initialize Policy** and approve the Phantom prompt. The transaction sign
 
 ![Honorary Position](docs/assets/ui-honorary.png)
 
+<img width="1207" height="852" alt="image" src="https://github.com/user-attachments/assets/238089d0-4ead-410e-a098-be38e133b7af" />
+
 Again, values are filled automatically:
 
 - `Policy PDA` – `LOCAL_FIXTURE.policy`
@@ -95,6 +102,9 @@ Press **Initialize Honorary Position** to create the position PDA and tie it to 
 ### 4. Daily Crank – Quote Fee Distribution
 
 ![Daily Crank](docs/assets/ui-crank.png)
+
+<img width="1243" height="876" alt="image" src="https://github.com/user-attachments/assets/56593374-e7b3-4ef4-9875-f3cad8fe510e" />
+
 
 This form requires both static and per-investor values:
 
@@ -115,6 +125,9 @@ For real payout pages you’ll pass the Streamflow stream and investor ATA for e
 ### 5. Dashboard – Fetch Policy State
 
 ![Fetch State](docs/assets/ui-dashboard-policy.png)
+
+<img width="1139" height="671" alt="image" src="https://github.com/user-attachments/assets/2c37484e-76ef-4a3a-b196-70702406a248" />
+
 
 After the policy is initialized, **Fetch State** displays:
 
